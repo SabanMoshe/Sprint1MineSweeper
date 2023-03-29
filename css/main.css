@@ -1,0 +1,63 @@
+.h1{
+    text-emphasis-color:black;
+}
+
+body {
+    background:aqua;
+    color: black;
+}
+  
+.mine-sweeper {
+    padding-top: 50px;
+    width: 500px;
+    margin: auto;
+}
+
+table {
+    border-collapse:separate;
+    border-spacing: 10px;
+}
+
+.cell {
+    width: 50px;
+    height: 50px;
+    border-radius: .5em;
+    /* color: grey */
+   background: gray
+    /* border: 1px solid gray; */
+}
+.mine {
+    /* background: red */
+    background: gray
+}
+
+.selectedMine{
+    background: red
+}
+
+.selected {
+    background: yellow
+}
+.marked {
+    background: linear-gradient(to top,  black,  red);
+}
+
+
+
+
+
+
+.seat.booked:hover {
+    background: linear-gradient(to top,  black, gray);
+    cursor: not-allowed;
+}
+
+.popup {
+    background-color: orange;
+    padding: 20px;
+    position: absolute;
+    right: 0px;
+    top: 20px;
+}
+
+
