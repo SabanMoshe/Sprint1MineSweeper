@@ -4,11 +4,8 @@ const MINES = ' @' //later will add imogies
 const WALL = 'O'
 const FLAG = '🚩'
 const MINE = '💣'
-
-// const ONE = '1️⃣'//add digits later if time allows
-// const TWO = '2️⃣'
-// const NINE = '9️⃣'
-
+const MINE_IMG = '<img src="img/MINE.png">'//too big mine
+const NONE= '_'
 var life = 3
 
 const gGame = {
@@ -75,6 +72,7 @@ function buildBoard(size) {
 function setMinesNegsCount() {//getting matrix of objects [  [{} {}...{}]  [{} {}...{}] ... [{} {}...{}] ]
     for (var i = 0; i < gBoard.length; i++) {
         for (var j = 0; j < gBoard[0].length; j++) { //for each cell look for mines neighbors
+
             var count = countNegsCount(gBoard, i, j)
             gBoard[i][j].minesAroundCount += count
         }
@@ -97,21 +95,29 @@ function countNegsCount(board, rowIdx, colIdx) {
 
 
 function renderBoard() {
+    console.log('renderedBoard')
     var strHTML = ''
     for (var i = 0; i < gBoard.length; i++) {
         strHTML += `<tr class ="row" >\n` //adding class row for each i
         for (var j = 0; j < gBoard[0].length; j++) {
             const cell = gBoard[i][j]
 
-            var className = (cell.isMine) ? 'mine' : ''//adding classes fpr later
+            var className = (cell.isMine) ? 'mine ' : ''//adding classes fpr later
             if (cell.isMarked) className += ' marked'
-            if (cell.isShown) className += ' shown'
+            if (cell.isShown) className += ' shown '
+
+            var cellClassspecific = getClassName({ i: i, j: j }) + ' '
+
+            className += cellClassspecific
 
             const title = `cell: ${i}, ${j}`
 
-            strHTML += `\t<td title="${title}" class="cell ${className}" 
+            strHTML += `\t<td title="${title}" 
+            class="cell ${className}" 
             onclick="onCellClicked(this, ${i}, ${j})" 
-            oncontextmenu="onCellMarked(this, ${j}, ${j})">
+            oncontextmenu="onCellMarked(this, ${i}, ${j})"
+            class=class-${i}-${j}>
+    
             </td>\n`
         }
         strHTML += `</tr>\n`
@@ -124,59 +130,129 @@ function renderBoard() {
 
 function onCellClicked(elCell, i, j) {
     // Select the elCell and set the value
-
     const cell = gBoard[i][j]//for Modal
     console.log('cellClicked', elCell, i, j)
-    //console.log('gBoard[i][j]', gBoard[i][j])
-    if (cell.isMine === true) {
+
+    if (cell.isMine === true) {// if MINE – reveal the mine clicked
         elCell.classList.add('selectedMine')
-
-        //MODAL update
-        gBoard[i][j].isMarked = true
-        gBoard[i][j].isShown = true
-
-
-        //DOM update
-        renderCell(location, MINE)
-        //add mine image MINE = '💣'
-        
-        
-        
+        //MODAL update:
+        cell.isMarked = true
+        cell.isShown = true
+        //DOM update:
+        renderCell({ i: i, j: j }, MINE)
         gameOver()
-        //checkGameOver() with 3 lifes later 
+        //checkGameOver() with 3 lifes later      
+    }
+    if (cell.minesAroundCount && cell.isMine !== true) {//Cell with mine neighbors – reveal the cell alone
+        //MODAL update:
+        cell.isShown = true
+        //DOM update:
+        console.log('cell.minesAroundCount', cell.minesAroundCount)
+        //renderBoard()
+        var num = cell.minesAroundCount
+        renderCell({ i: i, j: j }, num)
+        //not complete...      
+    }
+
+    if (!cell.minesAroundCount && cell.isMine !== true) {// Cell without mine neighbors – expand it and its 1st degree neighbors
+        console.log('no Mine neigbors') 
+        cell.isShown = true // for middle cell to reveal as well
+        console.log('i , j', i, j)
+        revealNegs(i, j)
+        console.log('cell', cell)
+        //renderBoard()
+        renderNeigCell({ i: i, j: j }, NONE)
+        //console.log('i , j', i , j)
+
+    }
+}
+//geting location object { i: i, j: j }
+function renderNeigCell(location, value) {
+    console.log('renderNeigCell')
+    var rowIdx = location.i
+    var colIdx = location.j
+    
+    const cellSelector = '.' + getClassName(location) // cell-i-j
+    const elCell = document.querySelector(cellSelector)
+    elCell.innerHTML = value
+
+    for (var i = rowIdx - 1; i <= rowIdx + 1; i++) {
+        if (i < 0 || i >= gLevel.SIZE) continue
+        for (var j = colIdx - 1; j <= colIdx + 1; j++) {
+            if (i === rowIdx && j === colIdx) continue
+            if (j < 0 || j >= gLevel.SIZE) continue
+            //console.log('i j', i,j)
+            //cell.isShown = true
+            gBoard[rowIdx][colIdx].isShown = true
+            console.log('location', location)
+
+            const cellSelector = '.' + getClassName({ i: i, j: j }) // cell-i-j
+            const elCell = document.querySelector(cellSelector)
+            elCell.innerHTML = value
+
+        }
     }
 
 }
 
-
-// location is an object like this - { i: 2, j: 7 }
+// Convert a location object { i: i, j: j } to a selector and render a value in that element
 function renderCell(location, value) {
-    // Select the elCell and set the value
-    //const elCell = document.querySelector(`.cell-${location.i}-${location.j}`)
-    //elCell.innerHTML = value
+    const cellSelector = '.' + getClassName(location) // cell-i-j
+    const elCell = document.querySelector(cellSelector)
+    elCell.innerHTML = value
+}
+
+
+function revealNegs(rowIdx, colIdx) {//reveal neighboros
+    //const cell=gBoard[rowIdx][colIdx]
+    //var len = 4
+    //var minesNegCount = 0
+    for (var i = rowIdx - 1; i <= rowIdx + 1; i++) {
+        if (i < 0 || i >= gLevel.SIZE) continue
+        for (var j = colIdx - 1; j <= colIdx + 1; j++) {
+            if (i === rowIdx && j === colIdx) continue
+            if (j < 0 || j >= gLevel.SIZE) continue
+            //console.log('i j', i,j)
+            //cell.isShown = true
+            gBoard[rowIdx][colIdx].isShown = true
+
+        }
+    }
+    //return minesNegCount
 }
 
 // Returns the class name for a specific cell
 function getClassName(location) {
-   // const cellClass = 'cell-' + location.i + '-' + location.j
-   // return cellClass
+    const cellClass = 'cell-' + location.i + '-' + location.j
+    return cellClass
+}
+
+//function onCellMarked(elCell)  - this is the request
+function onCellMarked(elCell, i, j) {
+    console.log('cell_right_mouse_Clicked', elCell)
+
+    const cell = gBoard[i][j]//for Modal
+
+    cell.isMarked = true
+    // gBoard[i][j].isShown = true
+
+    //DOM update
+    renderCell({ i: i, j: j }, FLAG)
+
+    // gameOver()
+    //checkGameOver() with 3 lifes later 
+    //}
+
 }
 
 
-
-
-
-function onCellMarked(elCell) {
-    console.log('cell_right_Clicked', elCell)
+function checkGameOver() {
+    //TODO Game ends when all mines are marked, 
+    //TODO and all the other cells are shown
+    life--
+    console.log("You steped om a Mine! Your remaining life is: ", life)
+    if (life === 0) gameOver()
 }
-
-
-// function checkGameOver() {
-//TODO Game ends when all mines are marked, and all the other cells are shown
-//     life--
-//     console.log("You steped om a Mine! Your remaining life is: ",life )
-//     if (life ===0) gameOver() 
-// }
 
 function gameOver() {
     console.log("game over")

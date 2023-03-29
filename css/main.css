@@ -39,12 +39,15 @@ table {
     background: yellow
 }
 .marked {
-    background: linear-gradient(to top,  black,  red);
+    background: red
+}
+.shown{
+    background: lightgray
 }
 
-
-
-
+/* .cell .mine .marked .shown{
+    background: yellow
+} */
 
 
 .seat.booked:hover {
