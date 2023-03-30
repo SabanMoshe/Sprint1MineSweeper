@@ -10,36 +10,39 @@
 </head>
 
 <body onload="onInit()">
-<!-- onkeyup="movePacman(event)"> -->
-<h1>
-  MineSweeper 
-</h1>
+  <h1>
+    MineSweeper
+  </h1>
 
-<div id="myTable" class = "table-container"> 
-  <table class="table">
-    <tbody class="mine-sweeper"> 
-    </tbody>
-  </table>
-</div> 
+  <h2 class="Life">Life: <span>0</span></h2>
+  <h3 class="Time"> <span>0.00</span></h3>
+  <button class="Exterminator" onclick ="eliminate3Mines()">Exterminator</button>
 
-<footer>
-  <p>Author: Moshe Saban</p>
-</footer>
+  <div id="myTable" class="table-container">
+    <table class="table">
+      <tbody class="mine-sweeper">
+      </tbody>
+    </table>
+  </div>
+
+
+  <div class="modal hide">
+    <h4 class="user-msg">click to try again</h4>
+    <button class="restart-btn" onclick="onInit()">Restart</button>
+  </div>
+
+  <div class="modal2 hide">
+    <h5 class="Life Message">You clicked on a mine! note your life</h4>
+    <button class="restart-btn" onclick ="hideModal2()">contine</button>
+  </div>
+  <!-- <footer>
+  <p>Author:Moshe Saban CSS is also important but working on the recorsia :)</p>
+</footer> -->
+
+
 
   <script src="js/main.js"></script>
   <script src="js/util.js"></script>
-  
-  <!-- <script>//insert
-    // const div = document.getElementById("myTable");
-    // div.addEventListener("contextmenu", (e) => {e.preventDefault()});
-  </script> -->
-
-  <!-- <div id="myTable" style="border:1px solid black;text-align:center"></div>
-const div = document.getElementById("myTable")
-div.addEventListener("contextmenu", (e) => {e.preventDefault()}) -->
-
-
-
 
 </body>
 

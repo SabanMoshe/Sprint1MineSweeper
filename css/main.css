@@ -8,9 +8,9 @@ body {
 }
   
 .mine-sweeper {
-    padding-top: 50px;
-    width: 500px;
+
     margin: auto;
+    position: absolute;
 }
 
 table {
@@ -45,12 +45,19 @@ table {
     background: lightgray
 }
 
+
+p {
+    color: black;
+    position: absolute;
+    margin: 10px;
+}
+
 /* .cell .mine .marked .shown{
     background: yellow
 } */
 
 
-.seat.booked:hover {
+/* .seat.booked:hover {
     background: linear-gradient(to top,  black, gray);
     cursor: not-allowed;
 }
@@ -61,6 +68,39 @@ table {
     position: absolute;
     right: 0px;
     top: 20px;
+} */
+
+
+.timer{
+    color: white;
+    font-size: large;
+}
+
+.modal {
+    background-color: green;
+    border: 5px solid white;
+    width: 100px;
+    padding: 20px;
+    position: absolute;
+    top: 300px;
+    left: calc(50% - 175px);
+}
+
+.hide {
+    display: none;
 }
 
 
+.modal2 {
+    background-color: orange;
+    border: 5px solid white;
+    width: 100px;
+    padding: 20px;
+    position: absolute;
+    top: 300px;
+    left: calc(50% - 175px);
+}
+
+.hide2 {
+    display: none;
+}

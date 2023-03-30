@@ -6,10 +6,10 @@ const FLAG = '🚩'
 const MINE = '💣'
 const MINE_IMG = '<img src="img/MINE.png">'//too big mine
 const NONE = '_'
-var life = 3
+var gLife = 3
 
 const gGame = {
-    isOn: true,
+    isOn: false,
     shownCount: 0, //shownCount: How many cells are shown 
     markedCount: 0,// How many cells are marked (with a flag)
     secsPassed: 0
@@ -18,49 +18,52 @@ const gGame = {
 //Support 3 levels of the game
 var level = "beginner" //get it from button later
 if (level === " beginner") {//add medium and expert later
-    var gLevel = {
-        SIZE: 4,
-        MINES: 2
-    }
+    // var gLevel = {
+    //     SIZE: 4,
+    //     MINES: 2
+    // }
 }
-
-var gLevel = {
-    SIZE: 4,
-    MINES: 2
+const gLevel = { //add buttons for level later
+    SIZE: 8,
+    MINES: 14
 }
+var gElTimer = 1
+var gTimerClick = 0
+var gTimerIntervalId
 
 const gBoard = []
-
 function onInit() {
-    //This is called when page loads 
+    gLife = 3
+    gGame.isOn = true
+    gGame.shownCount=0
+    gGame.markedCount=0
+    gGame.secsPassed=0
+    gTimerClick = 0
+    updateLife()
     buildBoard(gLevel.SIZE) //**Creating my MODAL Matrix of cell objects
     console.log('gBoardOnInit', gBoard)
     renderBoard()
-    //console.log('gBoardafter renderboard', gBoard)
+    hideModal()
 }
 
 function buildBoard(size) {
     console.log('size', size)
     // Complete - Builds the board 
     // Complete - Set the mines - 2 mines at fixed at first
-    // TODOCall setMinesNegsCount() 
-    // TODO Return the created board
-    // TODO Set the mines - 2 mines at local at first
+    // Complete setMinesNegsCount() 
+    // complete Return the created board (no need it's global)
+    // complete Set the mines - 2 mines at local at first
     //const board = []
+
+    var randomIndxMines = getRandomMinesIdx()//[{i,j} {i,j}] // getting the mines index array
+    console.log('randomIndxMines', randomIndxMines)
+
     for (var i = 0; i < size; i++) {
         gBoard[i] = []
         for (var j = 0; j < size; j++) {
-            //board[i][j] = '0'
-            if ((i === 1 && j === 1) || (i === size - 1 && j === size - 1)) { //placing initial mines on fixed positions
-                //first placing 2 Mines maually
-                var cell = {
-                    minesAroundCount: 0,
-                    isShown: false,
-                    isMine: true,
-                    isMarked: false
-                }
-                gBoard[i][j] = cell
-            } else {
+
+
+             //*************Random Mines Option********************************* */
                 var cell = {
                     minesAroundCount: 0,
                     isShown: false,
@@ -68,18 +71,53 @@ function buildBoard(size) {
                     isMarked: false
                 }
                 gBoard[i][j] = cell
-            }
-        }
-    }
-    setMinesNegsCount()//running on global variable
-    // setMinesNegsCount is Counting mines around each cell and set the cell's minesAroundCount.
-    
-    //requested to retune the board. but it's global- 
-    //I might need to duplicate it later 
 
+               //running over cels when mines are relevalt - not efficient - improve if tim allows
+                //running on the mines index array
+                for (var index = 0; index < gLevel.MINES; index++) {
+                    if ((randomIndxMines[index].randIdx === i) && (randomIndxMines[index].randJdx === j)) {
+                        console.log('i,j', i, j)
+                        var cell = {
+                            minesAroundCount: 0,
+                            isShown: false,
+                            isMine: true,
+                            isMarked: false
+                        }
+                        gBoard[i][j] = cell
+                    }   
+                }
+
+            //**************2 Mines Option****************************** */
+            // if ((i === 1 && j === 1) || (i === size - 1 && j === size - 1)) { //placing initial mines on fixed positions
+            //     //first placing 2 Mines maually
+            //     var cell = {
+            //         minesAroundCount: 0,
+            //         isShown: false,
+            //         isMine: true,
+            //         isMarked: false
+            //     }
+            //     gBoard[i][j] = cell
+
+            // } else {
+            //     var cell = {
+            //         minesAroundCount: 0,
+            //         isShown: false,
+            //         isMine: false,
+            //         isMarked: false
+            //     }
+            //     gBoard[i][j] = cell
+            // }
+        }
+
+    }
+
+ //*********************************************************** */
+
+    setMinesNegsCount()//running on global variable
 }
 
-// TODO setMinesNegsCount(board) Count mines around each cell and set the cell's minesAroundCount.
+// complete - setMinesNegsCount(board) Count mines around each cell and set the cell's minesAroundCount.
+
 function setMinesNegsCount() {//getting matrix of objects [  [{} {}...{}]  [{} {}...{}] ... [{} {}...{}] ]
     //saving for each cell, how many MINE neigboors it has
     //("isShow is still true")
@@ -142,6 +180,15 @@ function renderBoard() {
 
 
 function onCellClicked(elCell, i, j) {
+    console.log('elCell', elCell)
+    console.log('gTimerClick', gTimerClick)
+    if (gTimerClick === 0) {
+        startTimer()
+        gTimerClick++
+        //gTimerClick++
+        console.log('gTimerClick', gTimerClick)
+    }
+    if (gGame.isOn= false) return
     // Select the elCell and set the value
     console.log('Entered onCellClicked(elCell, i, j)')
     console.log('elCell and i j =', elCell, i, j)
@@ -151,335 +198,281 @@ function onCellClicked(elCell, i, j) {
         console.log('the selected cell isShown')
         return
     }
-    elCell.classList.add('selected')
+    //elCell.classList.add('selected')
     console.log('elCell after .add(selected) =', elCell)
 
     if (cell.isMine === true) {// if MINE – reveal the mine clicked
-        elCell.classList.add('selectedMine')
+        //elCell.classList.add('selectedMine')
         //MODAL update:
-        cell.isMarked = true
-        cell.isShown = true
-        //DOM update:
-        renderCell({ i: i, j: j }, MINE)
-        gameOver()
-        //checkGameOver() with 3 lifes later      
+        gLife--
+        updateLife()
+        if (!checkGameOver()) {
+            //console.log("got into checkgameover")
+            showModal2()
+        } else {
+            elCell.classList.add('selectedMine')
+            cell.isShown = true
+            gGame.shownCount++
+            //DOM update:
+            renderCell({ i: i, j: j }, MINE)
+            //**here need to loop on the board together with the mines arry to show all mines and pint in red
+            gameOver()
+            //with 3 lifes later   
+        }
+
     }
-    if (cell.minesAroundCount && cell.isMine !== true) {//Cell with mine neighbors – reveal the cell alone
+
+
+    if (cell.minesAroundCount && cell.isMine !== true) {//Cell with no neighbors – reveal the cell alone
+        elCell.classList.add('selected')
         //MODAL update:
         cell.isShown = true
+        gGame.shownCount++
         //DOM update:
         console.log('cell.minesAroundCount', cell.minesAroundCount)
         //renderBoard()
         var num = cell.minesAroundCount
-        
         renderCell({ i: i, j: j }, num)
-        
+
         //not complete...      
     }
 
     if (!cell.minesAroundCount && cell.isMine !== true) {// Cell without mine neighbors – expand it and its 1st degree neighbors
-        
+        elCell.classList.add('selected')
         console.log('no Mine neigbors')
-        
-        //console.log('gBoard', gBoard)
-        //cell.isShown = true // for middle cell to reveal as well
+
         console.log('i,j', i, j)
-        // revealNegs(i, j)
-        // console.log('cell', cell)
 
-        //renderBoard()
-        
-        expandShown1(elCell, i, j)//expandShown(board, elCell, i, j)
-       
-        //renderNeigCell({ i: i, j: j }, NONE)
+        //gGame.shownCount++
+        //expandShown1(i, j)//expandShown(board, elCell, i, j)
+        expandShownRec(i, j)
 
-        //console.log('i , j', i , j)
     }
-}
-
-//do not enter expandShown() so edit to expandShown1()
-function expandShown1(elCell, rowIdx, colIdx) {//expandShown(board, elCell, i, j) 
-    // console.log('Entered expandShown1')
-    // console.log('gBoard', gBoard)
-     console.log('elCell =', elCell)
-    // console.log('rowIdx,colIdx', rowIdx,colIdx )
-    for (var i = rowIdx - 1; i <= rowIdx + 1; i++) {
-        if (i < 0 || i >= gLevel.SIZE) continue
-        for (var j = colIdx - 1; j <= colIdx + 1; j++) {
-            if (i === rowIdx && j === colIdx) continue
-            if (j < 0 || j >= gLevel.SIZE) continue
-            var currCell =  gBoard[i][j]
-            //console.log('i,j', i,j)
-            //console.log('currCell', currCell)
-            const cellSelector = '.' + getClassName({ i: i, j: j }) // cell-i-j
-            //console.log('cellSelector', cellSelector)
-            const elCell = document.querySelector(cellSelector)
-            //console.log('elCell_', elCell)
-            elCell.classList.add('selected')
-          
-            if (currCell.minesAroundCount) elCell.innerText = currCell.minesAroundCount
-            //if currCell.minesAroundCount = 0 do dot show the number
-        }
-    }
-}
-
-//geting location object { i: i, j: j }
-function renderNeigCell(location, value) {
-    console.log('renderNeigCell')
-    var rowIdx = location.i
-    var colIdx = location.j
-
-    const cellSelector = '.' + getClassName(location) // cell-i-j
-    const elCell = document.querySelector(cellSelector)
-    elCell.innerHTML = value
-
-    for (var i = rowIdx - 1; i <= rowIdx + 1; i++) {
-        if (i < 0 || i >= gLevel.SIZE) continue
-        for (var j = colIdx - 1; j <= colIdx + 1; j++) {
-            if (i === rowIdx && j === colIdx) continue
-            if (j < 0 || j >= gLevel.SIZE) continue
-            //console.log('i j', i,j)
-            //cell.isShown = true
-            gBoard[rowIdx][colIdx].isShown = true
-            console.log('location', location)
-
-            const cellSelector = '.' + getClassName({ i: i, j: j }) // cell-i-j
-            const elCell = document.querySelector(cellSelector)
-            elCell.innerHTML = value
-
-        }
-    }
-
-}
-
-// Convert a location object { i: i, j: j } to a selector and render a value in that element
-function renderCell(location, value) {
-    const cellSelector = '.' + getClassName(location) // cell-i-j
-    const elCell = document.querySelector(cellSelector)
-    elCell.innerHTML = value
-}
-
-
-function revealNegs(rowIdx, colIdx) {//reveal neighboros
-    //const cell=gBoard[rowIdx][colIdx]
-    //var len = 4
-    //var minesNegCount = 0
-    for (var i = rowIdx - 1; i <= rowIdx + 1; i++) {
-        if (i < 0 || i >= gLevel.SIZE) continue
-        for (var j = colIdx - 1; j <= colIdx + 1; j++) {
-            if (i === rowIdx && j === colIdx) continue
-            if (j < 0 || j >= gLevel.SIZE) continue
-            //console.log('i j', i,j)
-            //cell.isShown = true
-            gBoard[rowIdx][colIdx].isShown = true
-
-        }
-    }
-    //return minesNegCount
-}
-
-// Returns the class name for a specific cell
-function getClassName(location) {
-    const cellClass = 'cell-' + location.i + '-' + location.j
-    return cellClass
 }
 
 //function onCellMarked(elCell)  - this is the request
 function onCellMarked(elCell, i, j) {
     console.log('cell_right_mouse_Clicked', elCell)
-
     const cell = gBoard[i][j]//for Modal
-
-    cell.isMarked = true
-    // gBoard[i][j].isShown = true
-
-    //DOM update
-    renderCell({ i: i, j: j }, FLAG)
-
-    // gameOver()
-    //checkGameOver() with 3 lifes later 
-    //}
-
+    if (cell.isMarked) {
+        console.log('the selected cell is')
+        renderCell({ i: i, j: j }, ' ')
+        return
+    } else {
+        //Modal
+        const cell = gBoard[i][j]
+        cell.isMarked = true
+        //DOM 
+        renderCell({ i: i, j: j }, FLAG)
+        checkVictory1()
+    }
 }
 
+function checkVictory1() {
+    //winning is wehn you reveal all the empty squares witout hitting a mine
+    if ((gLevel.SIZE ** 2) === (gGame.markedCount + gGame.shownCount)) {
+        console.log('you win')
+        //add MODAL MESSEGE LATER
+        console.log('gGame.shownCount', gGame.shownCount)
+        console.log('gGame.markedCount', gGame.markedCount)
+    }
+}
 
 function checkGameOver() {
     //TODO Game ends when all mines are marked, 
     //TODO and all the other cells are shown
-    life--
-    console.log("You steped om a Mine! Your remaining life is: ", life)
-    if (life === 0) gameOver()
+
+    console.log("You steped om a Mine! Your remaining life is: ", gLife)
+    //ADD AMODAL LATER
+    if (gLife === 0) {
+        return true
+    } else return false
 }
 
 function gameOver() {
+    stopTimer()
     console.log("game over")
+    showModal() 
+}
+
+//seems to be working as recorsive!
+//seems to be working as recorsive!
+
+function expandShownRec(rowIdx, colIdx) { //seems to be working as recorsive!
+    console.log('EnteredexpandShownRec')
+    // stop condition
+    if (!relvant(rowIdx, colIdx)) return; // if the index sent is a mine or shown or marked get out of recorsia
+    //console.log('passed the shouldHandle ', !relvant)
+    renderCell2(rowIdx, colIdx);
+
+    if (gBoard[rowIdx][colIdx].minesAroundCount) return;
+    for (var i = rowIdx - 1; i <= rowIdx + 1; i++) 
+        for (var j = colIdx - 1; j <= colIdx + 1; j++) {
+            if (i === rowIdx && j === colIdx) continue
+            expandShownRec(i, j)       
+        }
+}
+
+function relvant(rowIdx, colIdx) {
+    console.log('Entered relvant')
+   
+    // out of bounds
+    if (rowIdx < 0 || rowIdx >= gLevel.SIZE) return false;
+    if (colIdx < 0 || colIdx >= gLevel.SIZE) return false;
+    
+    var currCell= gBoard[rowIdx][colIdx]; 
+    // if shown
+    if (currCell.isShown || currCell.isMarked || currCell.isMine) return false;
+
+    return true;
+}
+
+function renderCell2(rowIdx, colIdx) {
+    console.log('updateCell')
+    var currCell = gBoard[rowIdx][colIdx]; 
+    const cellSelector = '.' + getClassName({ i: rowIdx, j: colIdx }) // cell-i-j
+    const elCell = document.querySelector(cellSelector)
+    elCell.classList.add('selected')
+    if (currCell.minesAroundCount) elCell.innerText = currCell.minesAroundCount
+    currCell.isShown = true;
 }
 
 
-function expandShown(board, elCell, i, j) {
-    //TODO When user clicks a cell with no mines around, we need to open not only that cell, but also its neighbors. 
-    // NOTE: start with a basic implementation that only opens the non-mine 1st degree neighbors
+function updateLife() {
+    console.log('check')
+    const elBallsCount = document.querySelector('.Life span')
+    elBallsCount.innerText = gLife
+}
 
-    // TODO BONUS: if you have the time later, try to work more like the real algorithm 
-    // (see description at the Bonuses section)
+function startTimer() {
+    var startTime = Date.now()
+    gElTimer = document.querySelector('.Time')
+    gTimerIntervalId = setInterval(() => {
+        const diff = Date.now() - startTime
+        gGame.secsPassed=(diff / 1000).toFixed(1)
+        gElTimer.innerText = (diff / 1000).toFixed(1)
+    }, 10)
+}
 
+function stopTimer() {
+    clearInterval(gTimerIntervalId)
+}
+
+function showModal() {
+    const elModal = document.querySelector('.modal')
+    elModal.classList.remove('hide')
+}
+
+function hideModal() {
+    const elModal = document.querySelector('.modal')
+    elModal.classList.add('hide')
 }
 
 
+function showModal2() {
+    const elModal = document.querySelector('.modal2')
+    elModal.classList.remove('hide')
+}
 
+function hideModal2() {
+    const elModal = document.querySelector('.modal2')
+    elModal.classList.add('hide2')
+}
 
-// minesAroundCount: 0,
-// isShown: false,
-// isMine: false,
-// isMarked: false
+function eliminate3Mines(){ //elimination3 random mines
+    console.log('eliminate3Mines()')
+    const idx = getRandomIdx()
 
+    for (var i = 0; i < gLevel.SIZE; i++) { 
+        for (var j = 0; j < gLevel.SIZE; j++) {
+             console.log('gBoard[i][j].isMine', gBoard[i][j].isMine)  
+             
+             for (var index = 0; index < idx.length; index++) {
+                if ((idx[index].randIdx === i) && (idx[index].randJdx === j)) {
+                    gBoard[i][j].isMine=false //removing a mine
+                }
+            }       
+       } 
+    }
+}
 
-// var gElSelectedSeat = null
-// const gDataBase = createCinema()
-// renderCinema()
-
-// function createCinema() {
-//     const cinema = []
-//     for (var i = 0; i < 7; i++) {
-//         cinema[i] = []
-//         for (var j = 0; j < 15; j++) {
-//             const cell = {
-//                 isSeat: (j !== 7)
-//             }
-//             if (cell.isSeat) {
-//                 cell.isBooked = false
-//                 cell.price = 5 + i
-//             }
-//             cinema[i][j] = cell
+// for (var index = 0; index < gLevel.MINES; index++) {
+//     if ((randomIndxMines[index].randIdx === i) && (randomIndxMines[index].randJdx === j)) {
+//         console.log('i,j', i, j)
+//         var cell = {
+//             minesAroundCount: 0,
+//             isShown: false,
+//             isMine: true,
+//             isMarked: false
 //         }
-//     }
-
-//     cinema[4][4].isBooked = true
-//     return cinema
-// }
-
-// function renderCinema() {
-//     var strHTML = ''
-//     for (var i = 0; i < gCinema.length; i++) {
-//         strHTML += `<tr class="cinema-row" >\n`
-//         for (var j = 0; j < gCinema[0].length; j++) {
-//             const cell = gCinema[i][j]
-
-//             // For cell of type SEAT add seat class
-//             var className = (cell.isSeat) ? 'seat' : ''
-//             if (cell.isBooked) className += ' booked'
-
-//             // Add a seat title: `Seat: ${i}, ${j}`
-//             const title = `Seat: ${i + 1}, ${j + 1}`
-
-//             // TODO: for cell that is booked add booked class
-
-
-//             strHTML += `\t<td title="${title}" class="cell ${className}"
-//                             onclick="cellClicked(this, ${i}, ${j})" >
-//                          </td>\n`
-//         }
-//         strHTML += `</tr>\n`
-//     }
-//     // console.log(strHTML)
-
-//     const elSeats = document.querySelector('.cinema-seats')
-//     elSeats.innerHTML = strHTML
-// }
-
-// function cellClicked(elCell, i, j) {
-//     const cell = gCinema[i][j]
-//     // TODO: ignore none seats and booked
-//     if (!cell.isSeat || cell.isBooked) return
-
-//     console.log('Cell clicked: ', elCell, i, j)
-
-//     // Support selecting a seat
-//     elCell.classList.add('selected')
-
-//     // Only a single seat should be selected
-//     if (gElSelectedSeat) {
-//         gElSelectedSeat.classList.remove('selected')
-//     }
-
-//     gElSelectedSeat = (gElSelectedSeat === elCell) ? null : elCell
-
-//     // When seat is selected a popup is shown
-//     if (gElSelectedSeat) {
-//         showSeatDetails({ i: i, j: j })
-//     } else {
-//         hideSeatDetails()
-//     }
-// }
-
-// function showSeatDetails(pos) {
-//     const elPopup = document.querySelector('.popup')
-//     const seat = gCinema[pos.i][pos.j]
-
-//     const count = countSeatsAround(pos.i, pos.j)
-
-//     elPopup.querySelector('h2 span').innerText = `${pos.i + 1}-${pos.j + 1}`
-//     elPopup.querySelector('h3 span').innerText = `${seat.price}`
-//     elPopup.querySelector('h4 span').innerText = `${count}`
-//     // update the <button> dataset
-//     const elBtn = elPopup.querySelector('button')
-//     elBtn.dataset.i = pos.i
-//     elBtn.dataset.j = pos.j
-//     elPopup.hidden = false
-// }
-
-// function hideSeatDetails() {
-//     document.querySelector('.popup').hidden = true
-// }
-
-// function bookSeat(elBtn) {
-//     console.log('Booking seat, button: ', elBtn)
-
-//     const i = elBtn.dataset.i
-//     const j = elBtn.dataset.j
-
-//     gCinema[i][j].isBooked = true
-//     renderCinema()
-//     unSelectSeat()
-// }
-
-// function unSelectSeat() {
-//     hideSeatDetails()
-//     gElSelectedSeat.classList.remove('selected')
-//     gElSelectedSeat = null
-// }
+//         gBoard[i][j] = cell
 
 
 
-// function countSeatsAround(rowIdx, colIdx) {
-//     var seatCount = 0
+
+
+
+
+
+//*************previous expandShown versions *****************************/
+
+
+
+// //do not enter expandShown() so edit to expandShown1()
+// function expandShown1(rowIdx, colIdx) {//expandShown(board, elCell, i, j) 
+//     //TODO When user clicks a cell with no mines around, we need to open not only that cell, but also its neighbors. 
+//     // NOTE: start with a basic implementation that only opens the non-mine 1st degree neighbors
+//     // TODO BONUS: if you have the time later, try to work more like the real algorithm 
 //     for (var i = rowIdx - 1; i <= rowIdx + 1; i++) {
-//         if (i < 0 || i >= gCinema.length) continue
-//         for (var j = colIdx - 1; j <= colIdx + 1; j++) {
-//             if (i === rowIdx && j === colIdx) continue
-//             if (j < 0 || j >= gCinema[0].length) continue
-//             var currCell = gCinema[i][j]
-//             if (currCell.isSeat && !currCell.isBooked) seatCount++
+//         if (i < 0 || i >= gLevel.SIZE) continue //out of matrix bound (to left or too right)
+//         for (var j = colIdx - 1; j <= colIdx + 1; j++) { //out of matrix bound (to up or too down)
+//             if (i === rowIdx && j === colIdx) continue //this it the main cell that was sent
+//             if (j < 0 || j >= gLevel.SIZE) continue
+            
+
+//             //MODAL
+//             var currCell = gBoard[i][j]
+//             if(currCell.minesAroundCount){
+//                 console.log('currCell.minesAroundCount', currCell.minesAroundCount)
+//                 return //stooping condition
+//             } 
+//             currCell.isShown = true
+//             gGame.shownCount++
+
+//             //DOM
+//             const cellSelector = '.' + getClassName({ i: i, j: j }) // cell-i-j
+//             const elCell = document.querySelector(cellSelector)
+//             elCell.classList.add('selected')
+
+//             if (currCell.minesAroundCount) elCell.innerText = currCell.minesAroundCount
+
+
 //         }
 //     }
-//     return seatCount
 // }
 
-
-
-// var count = countFoodAround(gBoard, 0, 0) //Neighbors Loop
-// console.log('Found', count, ' food around me')
-// function countFoodAround(board, rowIdx, colIdx) {
-//     var foodCount = 0
+// //getting her first time if no mine arround
+// //not working  ar recorsive
+// function expandShown1Rec(elCell, rowIdx, colIdx) {//expandShown(board, elCell, i, j)
+//     console.log('elCell =', elCell)
 //     for (var i = rowIdx - 1; i <= rowIdx + 1; i++) {
-//         if (i < 0 || i >= board.length) continue
-//         for (var j = colIdx - 1; j <= colIdx + 1; j++) {
-//             if (i === rowIdx && j === colIdx) continue
-//             if (j < 0 || j >= board[0].length) continue
-//             var currCell = board[i][j]
-//             if (currCell === FOOD) foodCount++
+//         if (i < 0 || i >= gLevel.SIZE) continue //out of matrix bound (to left or too right)
+//         for (var j = colIdx - 1; j <= colIdx + 1; j++) { 
+//             if (i === rowIdx && j === colIdx) continue //this it the main cell that was sent
+//             if (j < 0 || j >= gLevel.SIZE) continue //out of matrix bound (to up or too down)
+            
+           
+//             //MODAL
+//             var currCell = gBoard[i][j]
+//             currCell.isShown = true
+//             gGame.shownCount++
+
+//             //DOM
+//             const cellSelector = '.' + getClassName({ i: i, j: j }) // cell-i-j
+//             const elCell = document.querySelector(cellSelector)
+//             elCell.classList.add('selected')
+//             if (currCell.minesAroundCount) elCell.innerText = currCell.minesAroundCount
+
 //         }
 //     }
-//     return count
 // }
-
