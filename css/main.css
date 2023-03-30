@@ -36,7 +36,7 @@ table {
 }
 
 .selected {
-    background: yellow
+    background: lightcyan
 }
 .marked {
     background: red

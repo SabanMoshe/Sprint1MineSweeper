@@ -5,7 +5,7 @@ const WALL = 'O'
 const FLAG = '🚩'
 const MINE = '💣'
 const MINE_IMG = '<img src="img/MINE.png">'//too big mine
-const NONE= '_'
+const NONE = '_'
 var life = 3
 
 const gGame = {
@@ -16,10 +16,19 @@ const gGame = {
 }
 
 //Support 3 levels of the game
+var level = "beginner" //get it from button later
+if (level === " beginner") {//add medium and expert later
+    var gLevel = {
+        SIZE: 4,
+        MINES: 2
+    }
+}
+
 var gLevel = {
     SIZE: 4,
     MINES: 2
 }
+
 const gBoard = []
 
 function onInit() {
@@ -27,6 +36,7 @@ function onInit() {
     buildBoard(gLevel.SIZE) //**Creating my MODAL Matrix of cell objects
     console.log('gBoardOnInit', gBoard)
     renderBoard()
+    //console.log('gBoardafter renderboard', gBoard)
 }
 
 function buildBoard(size) {
@@ -42,7 +52,7 @@ function buildBoard(size) {
         for (var j = 0; j < size; j++) {
             //board[i][j] = '0'
             if ((i === 1 && j === 1) || (i === size - 1 && j === size - 1)) { //placing initial mines on fixed positions
-                //first placin Mines
+                //first placing 2 Mines maually
                 var cell = {
                     minesAroundCount: 0,
                     isShown: false,
@@ -62,7 +72,8 @@ function buildBoard(size) {
         }
     }
     setMinesNegsCount()//running on global variable
-
+    // setMinesNegsCount is Counting mines around each cell and set the cell's minesAroundCount.
+    
     //requested to retune the board. but it's global- 
     //I might need to duplicate it later 
 
@@ -70,6 +81,8 @@ function buildBoard(size) {
 
 // TODO setMinesNegsCount(board) Count mines around each cell and set the cell's minesAroundCount.
 function setMinesNegsCount() {//getting matrix of objects [  [{} {}...{}]  [{} {}...{}] ... [{} {}...{}] ]
+    //saving for each cell, how many MINE neigboors it has
+    //("isShow is still true")
     for (var i = 0; i < gBoard.length; i++) {
         for (var j = 0; j < gBoard[0].length; j++) { //for each cell look for mines neighbors
 
@@ -130,8 +143,16 @@ function renderBoard() {
 
 function onCellClicked(elCell, i, j) {
     // Select the elCell and set the value
+    console.log('Entered onCellClicked(elCell, i, j)')
+    console.log('elCell and i j =', elCell, i, j)
+
     const cell = gBoard[i][j]//for Modal
-    console.log('cellClicked', elCell, i, j)
+    if (cell.isShown) {
+        console.log('the selected cell isShown')
+        return
+    }
+    elCell.classList.add('selected')
+    console.log('elCell after .add(selected) =', elCell)
 
     if (cell.isMine === true) {// if MINE – reveal the mine clicked
         elCell.classList.add('selectedMine')
@@ -150,28 +171,64 @@ function onCellClicked(elCell, i, j) {
         console.log('cell.minesAroundCount', cell.minesAroundCount)
         //renderBoard()
         var num = cell.minesAroundCount
+        
         renderCell({ i: i, j: j }, num)
+        
         //not complete...      
     }
 
     if (!cell.minesAroundCount && cell.isMine !== true) {// Cell without mine neighbors – expand it and its 1st degree neighbors
-        console.log('no Mine neigbors') 
-        cell.isShown = true // for middle cell to reveal as well
-        console.log('i , j', i, j)
-        revealNegs(i, j)
-        console.log('cell', cell)
-        //renderBoard()
-        renderNeigCell({ i: i, j: j }, NONE)
-        //console.log('i , j', i , j)
+        
+        console.log('no Mine neigbors')
+        
+        //console.log('gBoard', gBoard)
+        //cell.isShown = true // for middle cell to reveal as well
+        console.log('i,j', i, j)
+        // revealNegs(i, j)
+        // console.log('cell', cell)
 
+        //renderBoard()
+        
+        expandShown1(elCell, i, j)//expandShown(board, elCell, i, j)
+       
+        //renderNeigCell({ i: i, j: j }, NONE)
+
+        //console.log('i , j', i , j)
     }
 }
+
+//do not enter expandShown() so edit to expandShown1()
+function expandShown1(elCell, rowIdx, colIdx) {//expandShown(board, elCell, i, j) 
+    // console.log('Entered expandShown1')
+    // console.log('gBoard', gBoard)
+     console.log('elCell =', elCell)
+    // console.log('rowIdx,colIdx', rowIdx,colIdx )
+    for (var i = rowIdx - 1; i <= rowIdx + 1; i++) {
+        if (i < 0 || i >= gLevel.SIZE) continue
+        for (var j = colIdx - 1; j <= colIdx + 1; j++) {
+            if (i === rowIdx && j === colIdx) continue
+            if (j < 0 || j >= gLevel.SIZE) continue
+            var currCell =  gBoard[i][j]
+            //console.log('i,j', i,j)
+            //console.log('currCell', currCell)
+            const cellSelector = '.' + getClassName({ i: i, j: j }) // cell-i-j
+            //console.log('cellSelector', cellSelector)
+            const elCell = document.querySelector(cellSelector)
+            //console.log('elCell_', elCell)
+            elCell.classList.add('selected')
+          
+            if (currCell.minesAroundCount) elCell.innerText = currCell.minesAroundCount
+            //if currCell.minesAroundCount = 0 do dot show the number
+        }
+    }
+}
+
 //geting location object { i: i, j: j }
 function renderNeigCell(location, value) {
     console.log('renderNeigCell')
     var rowIdx = location.i
     var colIdx = location.j
-    
+
     const cellSelector = '.' + getClassName(location) // cell-i-j
     const elCell = document.querySelector(cellSelector)
     elCell.innerHTML = value
