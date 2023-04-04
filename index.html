@@ -16,9 +16,11 @@
 
   <h2 class="Life">Life: <span>0</span></h2>
   <h3 class="Time"> <span>0.00</span></h3>
-  <button class="Exterminator" onclick ="eliminate3Mines()">Exterminator</button>
+  <button class="Exterminator" onclick="eliminate3Mines()">Exterminator</button>
+  <button class="diagonals" onclick ="colorDiagonals()">diagonals for 3 sec</button>
+  <button class="plusClue" onclick ="plusClue()">Hint for 3 dec</button>
 
-  <div id="myTable" class="table-container">
+  <div id="myTable" >
     <table class="table">
       <tbody class="mine-sweeper">
       </tbody>
@@ -27,20 +29,19 @@
 
 
   <div class="modal hide">
-    <h4 class="user-msg">click to try again</h4>
-    <button class="restart-btn" onclick="onInit()">Restart</button>
+  <div class="user-msg">click to Play again</div>
+  <button class="restart-btn" onclick="onInit()">Restart</button>
   </div>
 
   <div class="modal2 hide">
     <h5 class="Life Message">You clicked on a mine! note your life</h4>
-    <button class="restart-btn" onclick ="hideModal2()">contine</button>
+      <button class="restart-btn" onclick="hideModal2()">contine</button>
   </div>
-  <!-- <footer>
-  <p>Author:Moshe Saban CSS is also important but working on the recorsia :)</p>
-</footer> -->
 
 
-
+  <div class="footer">
+    Author:Moshe Saban
+  </div>
   <script src="js/main.js"></script>
   <script src="js/util.js"></script>
 

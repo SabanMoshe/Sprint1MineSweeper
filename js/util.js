@@ -46,15 +46,12 @@ function getRandomIdx() {
 }
 
 
-
-
-
 // Convert a location object { i: i, j: j } to a selector and render a value in that element
-function renderCell(location, value) {
-    const cellSelector = '.' + getClassName(location) // cell-i-j
-    const elCell = document.querySelector(cellSelector)
-    elCell.innerHTML = value
-}
+// function renderCell(location, value) {
+//     const cellSelector = '.' + getClassName(location) // cell-i-j
+//     const elCell = document.querySelector(cellSelector)
+//     elCell.innerHTML = value
+// }
 
 
 // Returns the class name for a specific cell
@@ -68,6 +65,7 @@ function renderCell(location, value) {
     // Select the elCell and set the value
     const elCell = document.querySelector(`.cell-${location.i}-${location.j}`)
     elCell.innerHTML = value
+    return elCell
 }
 
 function getRandomIntInclusive(min, max) {

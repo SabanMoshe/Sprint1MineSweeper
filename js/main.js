@@ -6,13 +6,15 @@ const FLAG = '🚩'
 const MINE = '💣'
 const MINE_IMG = '<img src="img/MINE.png">'//too big mine
 const NONE = '_'
-var gLife = 3
+const twoManualMinesForDebug = false
+
 
 const gGame = {
     isOn: false,
     shownCount: 0, //shownCount: How many cells are shown 
     markedCount: 0,// How many cells are marked (with a flag)
-    secsPassed: 0
+    secsPassed: 0,
+    life: 3
 }
 
 //Support 3 levels of the game
@@ -30,10 +32,11 @@ const gLevel = { //add buttons for level later
 var gElTimer = 1
 var gTimerClick = 0
 var gTimerIntervalId
+var gDiag 
 
 const gBoard = []
 function onInit() {
-    gLife = 3
+    gGame.life = 3
     gGame.isOn = true
     gGame.shownCount=0
     gGame.markedCount=0
@@ -46,6 +49,21 @@ function onInit() {
     hideModal()
 }
 
+
+function colorDiagonals(){
+    gDiag= true
+    renderBoard()
+    gDiag = false
+    setTimeout(renderBoard, 3000)
+    
+}
+
+function plusClue(){
+    gGame.isHint= true
+    console.log('check')
+}
+
+
 function buildBoard(size) {
     console.log('size', size)
     // Complete - Builds the board 
@@ -54,7 +72,6 @@ function buildBoard(size) {
     // complete Return the created board (no need it's global)
     // complete Set the mines - 2 mines at local at first
     //const board = []
-
     var randomIndxMines = getRandomMinesIdx()//[{i,j} {i,j}] // getting the mines index array
     console.log('randomIndxMines', randomIndxMines)
 
@@ -62,8 +79,8 @@ function buildBoard(size) {
         gBoard[i] = []
         for (var j = 0; j < size; j++) {
 
-
-             //*************Random Mines Option********************************* */
+            if(!twoManualMinesForDebug) {
+                //*Random Mines Option
                 var cell = {
                     minesAroundCount: 0,
                     isShown: false,
@@ -71,8 +88,7 @@ function buildBoard(size) {
                     isMarked: false
                 }
                 gBoard[i][j] = cell
-
-               //running over cels when mines are relevalt - not efficient - improve if tim allows
+                //running over cels when mines are relevalt - not efficient - improve if tim allows
                 //running on the mines index array
                 for (var index = 0; index < gLevel.MINES; index++) {
                     if ((randomIndxMines[index].randIdx === i) && (randomIndxMines[index].randJdx === j)) {
@@ -86,38 +102,33 @@ function buildBoard(size) {
                         gBoard[i][j] = cell
                     }   
                 }
+            }else {
+                     
+                if ((i === 1 && j === 1) || (i === size - 1 && j === size - 1)) { //placing initial mines on fixed positions
+                    //first placing 2 Mines maually
+                    var cell = {
+                        minesAroundCount: 0,
+                        isShown: false,
+                        isMine: true,
+                        isMarked: false
+                    }
+                    gBoard[i][j] = cell
 
-            //**************2 Mines Option****************************** */
-            // if ((i === 1 && j === 1) || (i === size - 1 && j === size - 1)) { //placing initial mines on fixed positions
-            //     //first placing 2 Mines maually
-            //     var cell = {
-            //         minesAroundCount: 0,
-            //         isShown: false,
-            //         isMine: true,
-            //         isMarked: false
-            //     }
-            //     gBoard[i][j] = cell
-
-            // } else {
-            //     var cell = {
-            //         minesAroundCount: 0,
-            //         isShown: false,
-            //         isMine: false,
-            //         isMarked: false
-            //     }
-            //     gBoard[i][j] = cell
-            // }
+                } else {
+                    var cell = {
+                        minesAroundCount: 0,
+                        isShown: false,
+                        isMine: false,
+                        isMarked: false
+                    }
+                    gBoard[i][j] = cell
+                }
+            }
         }
-
     }
-
- //*********************************************************** */
-
     setMinesNegsCount()//running on global variable
 }
-
 // complete - setMinesNegsCount(board) Count mines around each cell and set the cell's minesAroundCount.
-
 function setMinesNegsCount() {//getting matrix of objects [  [{} {}...{}]  [{} {}...{}] ... [{} {}...{}] ]
     //saving for each cell, how many MINE neigboors it has
     //("isShow is still true")
@@ -143,8 +154,6 @@ function countNegsCount(board, rowIdx, colIdx) {
     }
     return minesNegCount
 }
-
-
 function renderBoard() {
     console.log('renderedBoard')
     var strHTML = ''
@@ -153,7 +162,8 @@ function renderBoard() {
         for (var j = 0; j < gBoard[0].length; j++) {
             const cell = gBoard[i][j]
 
-            var className = (cell.isMine) ? 'mine ' : ''//adding classes fpr later
+            var className = (cell.isMine) ? 'mine ' : ''//adding classes for later
+            if  (gDiag && (i === j  || i + j === gLevel.SIZE - 1)) className += ' diagonals '
             if (cell.isMarked) className += ' marked'
             if (cell.isShown) className += ' shown '
 
@@ -166,7 +176,7 @@ function renderBoard() {
             strHTML += `\t<td title="${title}" 
             class="cell ${className}" 
             onclick="onCellClicked(this, ${i}, ${j})" 
-            oncontextmenu="onCellMarked(this, ${i}, ${j})"
+            oncontextmenu="onCellMarked(${i}, ${j})"
             class=class-${i}-${j}>
     
             </td>\n`
@@ -178,52 +188,42 @@ function renderBoard() {
     elCells.innerHTML = strHTML
 }
 
-
 function onCellClicked(elCell, i, j) {
-    console.log('elCell', elCell)
-    console.log('gTimerClick', gTimerClick)
+    if (gGame.isOn= false) return
     if (gTimerClick === 0) {
         startTimer()
         gTimerClick++
-        //gTimerClick++
-        console.log('gTimerClick', gTimerClick)
     }
-    if (gGame.isOn= false) return
-    // Select the elCell and set the value
-    console.log('Entered onCellClicked(elCell, i, j)')
-    console.log('elCell and i j =', elCell, i, j)
-
     const cell = gBoard[i][j]//for Modal
     if (cell.isShown) {
         console.log('the selected cell isShown')
         return
     }
-    //elCell.classList.add('selected')
     console.log('elCell after .add(selected) =', elCell)
 
-    if (cell.isMine === true) {// if MINE – reveal the mine clicked
-        //elCell.classList.add('selectedMine')
-        //MODAL update:
-        gLife--
-        updateLife()
-        if (!checkGameOver()) {
-            //console.log("got into checkgameover")
-            showModal2()
-        } else {
-            elCell.classList.add('selectedMine')
-            cell.isShown = true
-            gGame.shownCount++
-            //DOM update:
-            renderCell({ i: i, j: j }, MINE)
-            //**here need to loop on the board together with the mines arry to show all mines and pint in red
-            gameOver()
-            //with 3 lifes later   
-        }
-
+    if(gGame.isHint){
+        showPlusHint(gBoard, i , j)
+        setTimeout(hidePlusHint, 3000, gBoard, i , j)
+        gGame.isHint= false
+        return
     }
 
-
-    if (cell.minesAroundCount && cell.isMine !== true) {//Cell with no neighbors – reveal the cell alone
+    if (cell.isMine === true) {// if MINE – reveal the mine clicked
+        //MODAL update:
+        gGame.life--
+        updateLife()
+        if(gGame.life){
+            showModal2()
+            }else {
+                elCell.classList.add('selectedMine')
+                cell.isShown = true
+                gGame.shownCount++
+                //DOM update:
+                renderCell({ i: i, j: j }, MINE)
+                checkGameOver()
+            }
+    }
+    if (cell.minesAroundCount && cell.isMine !== true) {//Cell with mines neighbors – reveal the cell alone
         elCell.classList.add('selected')
         //MODAL update:
         cell.isShown = true
@@ -233,73 +233,59 @@ function onCellClicked(elCell, i, j) {
         //renderBoard()
         var num = cell.minesAroundCount
         renderCell({ i: i, j: j }, num)
-
-        //not complete...      
+        //debugPrints()
+        checkGameOver()
+   
     }
-
     if (!cell.minesAroundCount && cell.isMine !== true) {// Cell without mine neighbors – expand it and its 1st degree neighbors
         elCell.classList.add('selected')
         console.log('no Mine neigbors')
-
         console.log('i,j', i, j)
-
-        //gGame.shownCount++
-        //expandShown1(i, j)//expandShown(board, elCell, i, j)
         expandShownRec(i, j)
-
+        //debugPrints()
+        checkGameOver()
     }
 }
 
 //function onCellMarked(elCell)  - this is the request
-function onCellMarked(elCell, i, j) {
-    console.log('cell_right_mouse_Clicked', elCell)
+function onCellMarked( i, j) {
     const cell = gBoard[i][j]//for Modal
+    if (cell.isShown) return
     if (cell.isMarked) {
-        console.log('the selected cell is')
         renderCell({ i: i, j: j }, ' ')
-        return
+        cell.isMarked = false
+        gGame.markedCount--
     } else {
         //Modal
         const cell = gBoard[i][j]
         cell.isMarked = true
+        gGame.markedCount++
         //DOM 
         renderCell({ i: i, j: j }, FLAG)
-        checkVictory1()
-    }
-}
-
-function checkVictory1() {
-    //winning is wehn you reveal all the empty squares witout hitting a mine
-    if ((gLevel.SIZE ** 2) === (gGame.markedCount + gGame.shownCount)) {
-        console.log('you win')
-        //add MODAL MESSEGE LATER
-        console.log('gGame.shownCount', gGame.shownCount)
-        console.log('gGame.markedCount', gGame.markedCount)
+        checkGameOver()
+        //debugPrints()
     }
 }
 
 function checkGameOver() {
     //TODO Game ends when all mines are marked, 
     //TODO and all the other cells are shown
-
-    console.log("You steped om a Mine! Your remaining life is: ", gLife)
-    //ADD AMODAL LATER
-    if (gLife === 0) {
-        return true
-    } else return false
+    //debugPrints()
+    if ((gLevel.SIZE ** 2) === (gGame.markedCount + gGame.shownCount)) {
+        showModal(true) 
+    }
+    if (gGame.life) return
+       else gameOver()
 }
 
 function gameOver() {
     stopTimer()
     console.log("game over")
-    showModal() 
+    showModal(false) 
 }
 
-//seems to be working as recorsive!
-//seems to be working as recorsive!
-
 function expandShownRec(rowIdx, colIdx) { //seems to be working as recorsive!
-    console.log('EnteredexpandShownRec')
+    // console.log('EnteredexpandShownRec')
     // stop condition
     if (!relvant(rowIdx, colIdx)) return; // if the index sent is a mine or shown or marked get out of recorsia
     //console.log('passed the shouldHandle ', !relvant)
@@ -309,21 +295,22 @@ function expandShownRec(rowIdx, colIdx) { //seems to be working as recorsive!
     for (var i = rowIdx - 1; i <= rowIdx + 1; i++) 
         for (var j = colIdx - 1; j <= colIdx + 1; j++) {
             if (i === rowIdx && j === colIdx) continue
-            expandShownRec(i, j)       
+            expandShownRec(i, j)    
         }
 }
 
 function relvant(rowIdx, colIdx) {
-    console.log('Entered relvant')
+    // console.log('Entered relvant')
    
     // out of bounds
     if (rowIdx < 0 || rowIdx >= gLevel.SIZE) return false;
     if (colIdx < 0 || colIdx >= gLevel.SIZE) return false;
-    
+
     var currCell= gBoard[rowIdx][colIdx]; 
     // if shown
     if (currCell.isShown || currCell.isMarked || currCell.isMine) return false;
-
+    
+    gGame.shownCount++    
     return true;
 }
 
@@ -337,11 +324,9 @@ function renderCell2(rowIdx, colIdx) {
     currCell.isShown = true;
 }
 
-
 function updateLife() {
-    console.log('check')
     const elBallsCount = document.querySelector('.Life span')
-    elBallsCount.innerText = gLife
+    elBallsCount.innerText = gGame.life
 }
 
 function startTimer() {
@@ -358,16 +343,23 @@ function stopTimer() {
     clearInterval(gTimerIntervalId)
 }
 
-function showModal() {
+function showModal(winStatus) {
+    if(winStatus){
+        const elModalWin = document.querySelector('.user-msg')
+        elModalWin.innerText= "You Won"
+        }else{
+            const elModalWin = document.querySelector('.user-msg')
+            elModalWin.innerText= "Game Over"
+        }
     const elModal = document.querySelector('.modal')
     elModal.classList.remove('hide')
+
 }
 
 function hideModal() {
     const elModal = document.querySelector('.modal')
     elModal.classList.add('hide')
 }
-
 
 function showModal2() {
     const elModal = document.querySelector('.modal2')
@@ -376,13 +368,12 @@ function showModal2() {
 
 function hideModal2() {
     const elModal = document.querySelector('.modal2')
-    elModal.classList.add('hide2')
+    elModal.classList.add('hide')
 }
 
 function eliminate3Mines(){ //elimination3 random mines
     console.log('eliminate3Mines()')
     const idx = getRandomIdx()
-
     for (var i = 0; i < gLevel.SIZE; i++) { 
         for (var j = 0; j < gLevel.SIZE; j++) {
              console.log('gBoard[i][j].isMine', gBoard[i][j].isMine)  
@@ -396,23 +387,67 @@ function eliminate3Mines(){ //elimination3 random mines
     }
 }
 
-// for (var index = 0; index < gLevel.MINES; index++) {
-//     if ((randomIndxMines[index].randIdx === i) && (randomIndxMines[index].randJdx === j)) {
-//         console.log('i,j', i, j)
-//         var cell = {
-//             minesAroundCount: 0,
-//             isShown: false,
-//             isMine: true,
-//             isMarked: false
-//         }
-//         gBoard[i][j] = cell
+
+function showPlusHint(board, rowIdx, colIdx){
+    for (var i = rowIdx - 1; i <= rowIdx + 1; i++) {
+        if (i < 0 || i >= board.length) continue
+        for (var j = colIdx - 1; j <= colIdx + 1; j++) {
+            //var cell = board[i][j]
+            // if (i === rowIdx && j === colIdx) continue
+            if (j < 0 || j >= board[0].length) continue
+            if ((i === rowIdx || j === colIdx)){//} && (i !== j)){//plus condition
+                // const currCell = renderCell3(i ,j )
+                var cell = board[i][j]
+                console.log('cell', cell)
+                if (cell.isMine){
+                    var value = MINE
+                }else if (!cell.minesAroundCount){
+                    var value =' '
+                }else{
+                    var value = cell.minesAroundCount 
+                } 
+                var elCell=renderCell({ i: i, j: j }, value)
+                elCell.classList.add('selected')           
+            }
+        }
+    }
+}
+
+function hidePlusHint(board, rowIdx, colIdx){
+    for (var i = rowIdx - 1; i <= rowIdx + 1; i++) {
+        if (i < 0 || i >= board.length) continue
+        for (var j = colIdx - 1; j <= colIdx + 1; j++) {
+            //var cell = board[i][j]
+            // if (i === rowIdx && j === colIdx) continue
+            if (j < 0 || j >= board[0].length) continue
+            if ((i === rowIdx || j === colIdx)){//} && (i !== j)){//plus condition
+                // const currCell = renderCell3(i ,j )
+                var cell = board[i][j]
+                console.log('cell', cell)
+                if (cell.isMine){
+                    var value = MINE 
+                }else {
+                    var value = cell.minesAroundCount        
+                }  
+                var elCell=renderCell({ i: i, j: j }, ' ')
+                elCell.classList.remove('selected')       
+            }
+        }
+    }
+}
 
 
 
 
 
-
-
+function debugPrints() {
+    console.log('gGame.isOn', gGame.isOn)
+    console.log('gGame.shownCount', gGame.shownCount)
+    console.log('gGame.markedCount', gGame.markedCount)
+    console.log('gGame.secsPassed', gGame.secsPassed)
+    console.log('shownCount + markedCount', gGame.shownCount + gGame.markedCount)
+    console.log('winning status',gGame.shownCount + gGame.markedCount === gLevel.SIZE*gLevel.SIZE)
+}
 
 //*************previous expandShown versions *****************************/
 
